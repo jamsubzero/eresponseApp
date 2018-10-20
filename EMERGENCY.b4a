@@ -1,0 +1,361 @@
+﻿Build1=Default,com.chmsc.eresponse
+File1=help fire1.png
+File10=home1.png
+File11=indicator_active.png
+File12=indicator_inactive.png
+File13=info.bal
+File14=instruction1.png
+File15=ref.png
+File16=reg.png
+File17=RegisterUserInfo.bal
+File18=safes areas1.png
+File19=safesareas1.png
+File2=help health.png
+File20=settings1.png
+File21=stormsurge.png
+File22=Weather.jpg
+File3=help LDR1.png
+File4=help police1.png
+File5=help.png
+File6=helpfire.png
+File7=helphealth.png
+File8=helpLDR.png
+File9=helppolice.png
+FileGroup1=Default Group
+FileGroup10=Default Group
+FileGroup11=Default Group
+FileGroup12=Default Group
+FileGroup13=Default Group
+FileGroup14=Default Group
+FileGroup15=Default Group
+FileGroup16=Default Group
+FileGroup17=Default Group
+FileGroup18=Default Group
+FileGroup19=Default Group
+FileGroup2=Default Group
+FileGroup20=Default Group
+FileGroup21=Default Group
+FileGroup22=Default Group
+FileGroup3=Default Group
+FileGroup4=Default Group
+FileGroup5=Default Group
+FileGroup6=Default Group
+FileGroup7=Default Group
+FileGroup8=Default Group
+FileGroup9=Default Group
+Group=Default Group
+IconFile=
+Library1=core
+Library10=threading
+Library11=locationmanager
+Library12=googlemapsextras
+Library13=googlemaps
+Library14=dialogs
+Library15=sql
+Library16=randomaccessfile
+Library17=b4xencryption
+Library2=gps
+Library3=runtimepermissions
+Library4=phone
+Library5=json
+Library6=animation
+Library7=httputils2
+Library8=http
+Library9=dateutils
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="5" android:targetSdkVersion="19"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~	~\n~AddApplicationText(~\n~<meta-data~\n~android:name="com.google.android.maps.v2.API_KEY"~\n~  android:value="AIzaSyCGpFIvOKE0wtOGlrwzuVMS9gnojUTN8aI"/>~\n~  <meta-data android:name="com.google.android.gms.version"~\n~   android:value="@integer/google_play_services_version" />~\n~)	~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+Module1=Starter
+Module2=Register
+Module3=ImageDownloader
+Module4=KeyValueStore
+NumberOfFiles=22
+NumberOfLibraries=17
+NumberOfModules=4
+Version=7.8
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: eResponse
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: portrait
+	#CanInstallToExternalStorage: False
+	  #AdditionalJar: com.google.android.gms:play-services-maps
+#End Region 
+
+#Region  Activity Attributes 
+	#FullScreen: True
+	#IncludeTitle: False
+	#ApplicationLabel: eResponse
+    #VersionCode: 1
+    #VersionName:
+    #SupportedOrientations: portrait
+	
+#End Region
+
+Sub Process_Globals
+	'These global variables will be declared once when the application starts.
+	'These variables can be accessed from all modules.
+	Dim xlat,xlon As Double
+
+End Sub
+
+
+Sub Globals
+	'These global variables will be redeclared each time the activity is created.
+	'These variables can only be accessed from this module.
+	Private wealocatiolbl As Label
+	Private templbl As Label
+	Private weatherlbl As Label
+	Private wdesclbl As Label
+	Private wicon As ImageView
+	Dim lm As LocationManager
+	Dim lm As LocationManager
+	Dim myurl As String
+	Private lat_lbl As Label
+	Private lon_lbl As Label
+	Dim phoneNum As String
+
+	Dim helpType As Int
+	
+	Private policeNum As String = "09054790111"
+	Private fireNum As String = "09054790111"
+	Private lddrmoNum As String = "09054790111"
+	Private healthNum As String = "09054790111"
+
+	
+	Private regBtn As Button
+	Private weblocation As Spinner
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	Activity.LoadLayout("info")
+	'weblocation.Add("Bacolod")
+	'Dim ph As PhoneId
+	'phoneNum = ph.GetLine1Number
+	If Starter.kvs.ContainsKey("currentUser") Then
+		lm.Initialize("Location")
+		lm.requestMobileLocation
+		lm.requestGPSLocation
+		regBtn.Enabled = False ' Already registered
+		regBtn.Text = Starter.kvs.Get("currentNameOfUser")
+	Else
+		'regBtn.Enabled = True ' Not yet registered
+		'regBtn.Text = "Register User Info"
+		StartActivity(Register)
+	End If
+End Sub
+
+
+Sub Start_get
+	lm.requestGPSLocation
+	lm.requestMobileLocation
+	Dim job As HttpJob
+	job.Initialize("WE",Me)
+	myurl="http://api.openweathermap.org/data/2.5/weather?lat="&xlat&"&lon="&xlon&"&units=metric&&APPID=cd75a2766b95cfff092441363cc8dc9e"
+	Log(myurl)
+	job.Download(myurl)
+	lat_lbl.Text=xlat
+	lon_lbl.Text=xlon
+	Log(xlat)
+	Log(xlon)
+	lm.stopGPSListening
+	lm.stopMobileListening
+	
+End Sub
+
+Sub JobDone (Job As HttpJob)
+ 
+	If Job.Success = True Then
+		Select Job.JobName
+			Case "WE"  ' //FOR WEATHER				
+				parserWeatherjson(Job.GetString)
+			End Select
+		End If
+				
+	If Job.Success = True Then
+				Select Job.JobName
+			Case "SOSHelp"
+				'Do nothing
+				Dim jsonres As String
+				jsonres = Job.GetString
+				Log("Back from Job:" & Job.JobName )
+				Log("Response from server: " & jsonres)
+             
+				Dim parser As JSONParser
+				parser.Initialize(jsonres)
+				Dim map1 As Map
+				map1  = parser.NextObject
+				Log(map1)
+				Dim res As String
+				res = map1.Get("code")
+				If res = "0" Then
+					Msgbox("SOS Successfully Sent","Success")
+				Else
+					Msgbox("Please make sure you are connected to the internet" & CRLF & "Code: -1" , "Failed")
+				 
+				End If
+		End Select
+		
+Else
+	Msgbox("Please make sure you are connected to the internet","Failed")
+End If
+
+End Sub
+
+Sub parserWeatherjson(jsontext As String)
+	Dim parser As JSONParser
+	parser.Initialize(jsontext)
+	Dim Maestro As Map = parser.NextObject
+	Log(jsontext)
+	
+	Dim mylocation As Map=Maestro.Get("sys")   ' MAP
+	Dim xmain As Map=Maestro.Get("main")
+	Dim  wea As List=Maestro.Get("weather")
+	
+	For Each colweather As Map In wea
+		Dim icon As String = colweather.Get("icon")
+		Dim description As String = colweather.Get("description")
+		Dim smain As String = colweather.Get("main")
+		'Dim id As Int = colweather.Get("id")
+		weatherlbl.text=smain
+		wdesclbl.Text=description
+		Dim links As Map
+		links.Initialize
+		links.Put(wicon,"http://openweathermap.org/img/w/"&icon&".png")
+		CallSubDelayed2(ImageDownloader, "Download", links)
+		CallSub(ImageDownloader, "ActivityIsPaused")
+	
+	Next
+	
+	
+	Dim mycountry As String = mylocation.Get("country")
+	Dim name As String =Maestro.Get("name")
+	Dim temp As Double = xmain.Get("temp")
+	wealocatiolbl.Text=name&", "&mycountry
+	templbl.Text= temp&"C"
+
+End Sub
+
+Sub Activity_Resume
+	If Starter.kvs.ContainsKey("currentUser") Then
+		regBtn.Enabled = False ' Already registered
+		regBtn.Text = Starter.kvs.Get("currentNameOfUser")
+	Else		
+		regBtn.Enabled = True ' Not yet registered
+		regBtn.Text = "Register User"
+	End If
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+
+End Sub
+
+Sub mnuStopListening_Click
+	lm.stopGPSListening
+End Sub
+
+Sub Location_LocationChanged (Longitude As Double, Latitude As Double, Altitude As Double, Accuracy As Float, Bearing As Float, Provider As String, Speed As Float, Time As Long)
+'	Msgbox("Longitude: " & Longitude & CRLF & "Latitude: " & Latitude & CRLF & "Altitude: " & Altitude & CRLF & "Accuracy: " & Accuracy & CRLF & "Bearing: " & Bearing & CRLF & "Speed: " & Speed,"Location")
+	xlat=Latitude
+	xlon=Longitude
+	lm.stopGPSListening
+	lm.stopMobileListening
+	Start_get
+	
+End Sub
+
+Sub SOSHelp(needType As String )
+'	Dim smssend  As PhoneSms
+'	smssend.Send("+639086936617", xlat & "/" & xlon & "/" & needType)
+If xlat <> 0 And xlon <> 0 Then
+		Dim InsertLocation As HttpJob
+		InsertLocation.Initialize("SOSHelp", Me)
+		Dim username As String  = Starter.kvs.Get("currentUser")
+		InsertLocation.download2("http://eresponse.tk/EmergencyServer/insertEmergencyBebers.php", Array As String("clientUN", username, "lati", xlat, "longi", xlon, "type", needType) )
+Else
+		Msgbox("Location Unkown. Please make sure you enabled your location","SOS Failed!")
+End If
+	
+	End Sub
+
+Sub callHelp
+	Dim pnumber As String
+	
+	If helpType=1 Then
+	 pnumber = policeNum
+	Else If helpType = 2 Then
+	  pnumber = fireNum
+	Else If helpType = 3 Then
+	  pnumber = lddrmoNum 
+    Else If helpType = 4 Then
+	pnumber = healthNum
+	End If
+	
+	Dim i As Intent
+	i.Initialize(i.ACTION_VIEW, "tel:"&pnumber)
+	StartActivity(i)
+End Sub
+
+Sub PLS_btn_Click
+
+	helpType=1
+	help
+
+	'1 is POLICE
+End Sub
+
+Sub SOS_btn_Click
+	helpType=2
+	help
+
+	'2 is FIRE
+End Sub
+
+Sub LDRR_btn_Click
+	helpType=3
+	help
+
+	'3 is LDDRMO
+End Sub
+
+
+Sub health_btn_Click
+	helpType=4
+	help
+
+	'3 is health
+End Sub
+
+
+Sub help()
+	
+	If Starter.kvs.ContainsKey("currentUser") Then
+		' Already registered
+		Dim i As Int
+		i = Msgbox2("Please select help method", "Emeregency", "Cancel", "Call", "Send SOS Online", Null)
+		If i = DialogResponse.POSITIVE Then ' Cancel
+		
+		Else If i= DialogResponse.CANCEL Then 'Call
+			callHelp  
+		
+		Else If i= DialogResponse.NEGATIVE Then 'SOS
+			SOSHelp(helpType)
+		
+		End If
+	Else
+	' Not yet registered
+		Msgbox("You must register first.","Not yet registered")
+		StartActivity(Register)
+	End If
+	
+
+
+End Sub
+
+
+
+Sub regBtn_Click
+	StartActivity(Register)
+End Sub
+
+
